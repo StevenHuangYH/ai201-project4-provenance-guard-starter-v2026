@@ -30,6 +30,7 @@ from flask import Flask, jsonify, request
 
 import audit
 import config
+import scoring
 
 app = Flask(__name__)
 
@@ -199,17 +200,76 @@ def submit():
     what should this do when `text` is missing, empty, or enormous? A crash on
     a malformed input is one of the most common real failures there is.
     """
-    payload = request.get_json(silent=True) or {}
+    import detector
+    import stylometry
 
-    # TODO: delete this and build the route.
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        payload = {}
+
+    creator_id = payload.get("creator_id")
+    if not isinstance(creator_id, str) or not creator_id.strip():
+        creator_id = "anonymous"
+
+    text = payload.get("text")
+    if not isinstance(text, str) or not text.strip():
+        return _reject(creator_id, "missing_text", 400,
+                       "Send the writing to check as a non-empty \"text\" string.")
+    if len(text) > config.MAX_TEXT_CHARS:
+        return _reject(creator_id, "text_too_long", 413,
+                       f"That's longer than {config.MAX_TEXT_CHARS:,} characters. "
+                       f"Send one piece of writing at a time.",
+                       text_length=len(text))
+
+    try:
+        model_score = detector.model_signal(text)
+    except ValueError as exc:
+        return _reject(creator_id, "text_too_short", 400, str(exc))
+    except detector.DetectorUnavailable as exc:
+        return jsonify({"error": "detector_unavailable", "message": str(exc)}), 503
+
+    style_score = stylometry.style_signal(text)
+    combined = scoring.combine_signals(model_score, style_score)
+    guess, label = scoring.score_to_label(combined)
+
+    # Distance from the nearest edge of the unsure band, scaled to 0–1. It
+    # says how far the score sits inside its label, not how right it is.
+    if guess == "ai":
+        confidence = (combined - config.AI_THRESHOLD) / (1 - config.AI_THRESHOLD)
+    elif guess == "human":
+        confidence = (config.HUMAN_THRESHOLD - combined) / config.HUMAN_THRESHOLD
+    else:
+        confidence = 0.0
+    confidence = round(confidence, 4)
+
+    content_id = str(uuid.uuid4())
+    audit.log_decision(
+        content_id=content_id,
+        creator_id=creator_id,
+        guess=guess,
+        model_score=model_score,
+        style_score=style_score,
+        combined_score=combined,
+        label=label,
+        confidence=confidence,
+    )
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /submit isn't built yet — see the TODO in app.py.",
-        "you_sent": {
-            "text_length": len(payload.get("text", "")),
-            "creator_id": payload.get("creator_id"),
-        },
-    }), 501
+        "content_id": content_id,
+        "guess": guess,
+        "confidence": confidence,
+        "label": label,
+        "model_score": model_score,
+        "style_score": style_score,
+        "combined_score": combined,
+        "status": "decided",
+    })
+
+
+def _reject(creator_id, reason, status_code, message, **extra):
+    """Refuse a request, and leave a trace of it in the log."""
+    audit.log_rejection(creator_id=creator_id, reason=reason,
+                        status_code=status_code, **extra)
+    return jsonify({"error": reason, "message": message}), status_code
 
 
 @app.post("/appeal")
@@ -232,14 +292,38 @@ def appeal():
     to the person on the other end. It's the only thing standing between a
     wrong accusation and nothing at all.
     """
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        payload = {}
 
-    # TODO: delete this and build the route.
+    content_id = payload.get("content_id")
+    reasoning = payload.get("reasoning")
+    if not isinstance(content_id, str) or not content_id.strip():
+        return jsonify({"error": "missing_content_id",
+                        "message": "Send the content_id from your submission."}), 400
+    if not isinstance(reasoning, str) or not reasoning.strip():
+        return jsonify({"error": "missing_reasoning",
+                        "message": "Tell us in a sentence or two why you think "
+                                   "the label is wrong."}), 400
+
+    content_id = content_id.strip()
+    decisions = [e for e in audit.entries_for(content_id) if e.get("status") == "decided"]
+    if not decisions:
+        return jsonify({"error": "not_found",
+                        "message": f"No submission has the id '{content_id}'. "
+                                   f"Check it was copied exactly."}), 404
+
+    audit.log_appeal(
+        content_id=content_id,
+        creator_id=decisions[0].get("creator_id", "unknown"),
+        reasoning=reasoning.strip(),
+    )
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /appeal isn't built yet — see the TODO in app.py.",
-        "you_sent": payload,
-    }), 501
+        "content_id": content_id,
+        "status": "under_review",
+        "message": "Thanks — your appeal is recorded and a person will review "
+                   "this decision. The original label stays on record until then.",
+    })
 
 
 # ── Already works ─────────────────────────────────────────────────────────────
