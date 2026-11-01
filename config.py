@@ -46,6 +46,11 @@ DETECTOR_MODEL = os.getenv("AI201_DETECTOR_MODEL", "gpt2")
 # 300 words, which is enough for the signal to mean something.
 DETECTOR_MAX_TOKENS = 400
 
+# Longest submission /submit accepts, in characters. About 3,000 words —
+# plenty for one piece of writing, and it stops a 50,000-word body from tying
+# up the stylometry loops. Anything longer gets a 413.
+MAX_TEXT_CHARS = 20_000
+
 
 # ─── Scoring (Milestone 4) ───────────────────────────────────────────────────
 # How much each signal counts toward the combined score.
@@ -56,6 +61,11 @@ DETECTOR_MAX_TOKENS = 400
 
 WEIGHT_MODEL_SIGNAL = 0.5
 WEIGHT_STYLE_SIGNAL = 0.5
+
+# Both signals must be at least this AI-leaning before the combined score is
+# allowed into the high-confidence AI band. If either reads more human than
+# this, the score is held just below AI_THRESHOLD — "unsure" at worst.
+AGREEMENT_FLOOR = 0.6
 
 
 # ─── Thresholds (Milestone 5) ────────────────────────────────────────────────

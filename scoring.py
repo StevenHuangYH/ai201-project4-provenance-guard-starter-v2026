@@ -51,12 +51,21 @@ def combine_signals(model_score: float, style_score: float) -> float:
 
     The weights in config.py are placeholders. Change them, or ignore them and
     write a different rule.
+
+    **The rule here:** an equal-weight average, with one asymmetry. To be
+    called high-confidence AI, BOTH signals have to lean AI (each at least
+    `config.AGREEMENT_FLOOR`). If either one reads more human than that, the
+    score is capped just under `config.AI_THRESHOLD`, so a split can produce
+    "unsure" but never an accusation. Calling something human needs no such
+    agreement — a wrong "human" costs far less than a wrong "AI".
     """
-    # TODO: replace this
-    return (
+    score = (
         config.WEIGHT_MODEL_SIGNAL * model_score
         + config.WEIGHT_STYLE_SIGNAL * style_score
     )
+    if min(model_score, style_score) < config.AGREEMENT_FLOOR:
+        score = min(score, config.AI_THRESHOLD - 0.01)
+    return round(min(max(score, 0.0), 1.0), 4)
 
 
 def score_to_label(score: float) -> tuple[str, str]:
@@ -85,12 +94,27 @@ def score_to_label(score: float) -> tuple[str, str]:
     think if they got it on their own work. That question is the whole
     milestone.
     """
-    # TODO: replace this — thresholds are in config.py
     if score >= config.AI_THRESHOLD:
-        return "ai", "PLACEHOLDER — write the high-confidence AI label."
+        return "ai", LABEL_AI
     if score <= config.HUMAN_THRESHOLD:
-        return "human", "PLACEHOLDER — write the high-confidence human label."
-    return "unsure", "PLACEHOLDER — write the unsure label."
+        return "human", LABEL_HUMAN
+    return "unsure", LABEL_UNSURE
+
+
+LABEL_HUMAN = "We think this was written by a person."
+
+LABEL_UNSURE = (
+    "We can't tell whether this was written by a person or with AI help. "
+    "That's common for plain or short writing, and it isn't an accusation. "
+    "If you wrote this yourself and want a person to look at it, you can "
+    "appeal."
+)
+
+LABEL_AI = (
+    "Our checks suggest this was likely written with AI. They can be wrong — "
+    "especially for simple, clear writing — so if you wrote this yourself, "
+    "please appeal and a person will review it."
+)
 
 
 def label_ranges() -> list[tuple[str, str]]:
