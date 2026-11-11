@@ -343,24 +343,20 @@ always reports 0.
 
 ## Rate Limiting
 
-**My limits:** ___ per minute, ___ per day
+**My limits:** 10 per minute, 200 per day
 
 **Why those numbers and not others:**
-<!-- Think about two people: a real writer submitting their own work a few
-     times an hour, and a script sending a thousand variations to map your
-     thresholds. Your numbers have to be liveable for the first and hostile to
-     the second. -->
+For a genuine writer submitting work for analysis, 10 submissions per minute (one every 6 seconds) is far higher than normal human writing or editing speed, and 200 per day provides plenty of headroom for active drafting and appeals across a full workday without friction. Conversely, for an adversary or automated script attempting to probe decision boundaries, map detector thresholds, or brute-force variations, 10/minute dramatically slows down automated exploration, and 200/day cuts probing off entirely before meaningful boundary mapping can occur.
 
-**What a caller counts as:** <!-- per address, or per creator_id? They fail
-differently — one script can look like a thousand callers, and one household
-can look like one. -->
+**What a caller counts as:**
+A caller is counted primarily by `creator_id` provided in the JSON payload, falling back to the client IP address (`get_remote_address()`) if `creator_id` is omitted, empty, or not a string. Per-creator tracking prevents an attacker from evading limits simply by routing requests through a shared proxy or VPN, while IP fallback prevents an unauthenticated attacker from circumventing limits by inventing random creator IDs.
 
 **The run of status codes when I pushed past it:**
 
 <!-- python run_attacks.py --flood 15 -->
 
 ```
-
+200 200 200 200 200 200 200 200 200 200 429 429 429 429 429
 ```
 
 ---
@@ -479,9 +475,9 @@ that produced it:
 
      SUBMISSION CHECKLIST — unit 8
 
-       [ ] Rate limiting on /submit, with your numbers justified
-       [ ] The pasted run of status codes showing 429
-       [ ] Audit log with all nine fields, recording rejections too
+       [x] Rate limiting on /submit, with your numbers justified
+       [x] The pasted run of status codes showing 429
+       [x] Audit log with all nine fields, recording rejections too
        [ ] The attack set run IN FULL, every input with an outcome
        [ ] Ten audit log entries pasted as text
        [ ] Five criteria across three trials
