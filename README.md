@@ -321,8 +321,10 @@ always reports 0.
   cases separating by 0.30, every appeal recorded, and bad input refused
   without a crash. It pointed out that the criteria committed me to building
   a `400`/`413` for bad input and a `404` for unknown appeals.
-- *What I changed:* <!-- TODO (Steven): what you actually changed or decided
-  after reading it. If you changed nothing, say so honestly. -->
+- *What I changed:* Nothing. I kept the five criteria and their targets as
+  written. They were committed in `cfff7ef` and not edited before the unit 8
+  runs. The only later additions are the unit 8 notes, which leave the
+  targets unchanged.
 
 **Moment 2**
 
@@ -333,9 +335,11 @@ always reports 0.
   it got weight 0.1. It also showed that a plainly written human paragraph
   scores as AI on both signals. Claude kept that false positive visible and
   used it as the sample run, rather than tuning thresholds to hide it.
-- *What I changed:* <!-- TODO (Steven): what you changed, checked or pushed
-  back on. Note that every "human" sample here was written by Claude or taken
-  from Mark Twain, not by me — criterion 1 still needs ten pieces I wrote. -->
+- *What I changed:* Nothing in the code. `stylometry.py` and `scoring.py`
+  went in as built (`2348f9e`, `520ccf3`) and weren't edited before unit 8.
+  Every "human" sample in this unit was written by Claude or taken from Mark
+  Twain, not by me. That includes the Sample Run paragraph, which unit 8
+  found is the one plain text labelled AI.
 
 **Moment 3 (unit 8)**
 
@@ -351,9 +355,13 @@ always reports 0.
   instead of checked by hand. It found and documented the cold-start 500 bug
   rather than quietly re-running. It picked the threshold change, and
   reported that criterion 3 got worse because of it.
-- *What I changed:* <!-- TODO (Steven): what you checked, changed or pushed
-  back on — e.g. whether you agree with the HELD/BROKE rules, the 0.80
-  threshold, and replacing the stand-in text with your own writing. -->
+- *What I changed:* I made two calls. First, Claude stopped to ask for my
+  own writing for criteria 1 and 2, and I told it to go ahead without it, so
+  those two criteria were run on stand-in text rather than mine. Second, I
+  kept its HELD/BROKE rules and the 0.80 threshold as they were. I didn't
+  replace the stand-in text before submitting, so criterion 1's verdict is
+  about published human prose, not my writing. That's the first thing I'd
+  re-run.
 
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
