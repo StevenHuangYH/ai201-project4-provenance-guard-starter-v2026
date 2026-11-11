@@ -56,6 +56,11 @@ of my own work comes back unsure the label stops meaning anything. Zero
 high-confidence AI labels is strict on purpose: with only 10 pieces, even one
 wrong accusation is a 10% false-positive rate.
 
+> **Note (unit 8) — not a revision; the target is unchanged.** The unit 8
+> runs used ten published human paragraphs as stand-ins for "pieces I wrote
+> myself" (sources and selection rule in `scenarios.py`). The verdict below
+> is for those texts. It still needs re-running on my own writing.
+
 ---
 
 ## 2. Plain writing isn't treated as machine writing
@@ -72,6 +77,11 @@ uses my normal writing, which may hide the problem. This one tests it head on.
 I allow 1 rather than 0 because I expect gpt2 to score this kind of text very
 predictable, and a target I'm certain to miss teaches me nothing. If it hits
 2 or more, the combining rule is letting one signal convict on its own.
+
+> **Note (unit 8) — not a revision; the target is unchanged.** Four of the
+> five texts are published plain-style human paragraphs (Hemingway, Booker T.
+> Washington). The fifth is the README's Sample Run paragraph, which Claude
+> wrote in unit 7. It isn't human, and it's the one that was labelled AI.
 
 ---
 
