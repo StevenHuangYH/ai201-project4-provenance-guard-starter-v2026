@@ -25,6 +25,7 @@ import argparse
 import datetime as dt
 import json
 import sys
+import time
 from pathlib import Path
 
 import config
@@ -64,6 +65,64 @@ def describe(body):
         text = body["text"]
         return text[:70] if text else "(empty text)"
     return json.dumps(body)[:120]
+
+
+def log_count(requests, args):
+    """How many entries the audit log holds right now."""
+    return requests.get(f"{args.url}/health", timeout=10).json().get("log_entries", 0)
+
+
+def new_log_entries(requests, args, before):
+    """The entries written since the log held `before` of them."""
+    added = log_count(requests, args) - before
+    if added <= 0:
+        return []
+    return requests.get(f"{args.url}/log", params={"limit": added},
+                        timeout=10).json().get("entries", [])
+
+
+def entries_for(requests, args, content_id):
+    """Every log entry for one content_id."""
+    entries = requests.get(f"{args.url}/log", timeout=30).json().get("entries", [])
+    return [e for e in entries if e.get("content_id") == content_id]
+
+
+def run_appeal_trial(requests, args, spec, trial):
+    """
+    Criterion 4: submit real texts then appeal each, and appeal ids that don't
+    exist. Checks the HTTP status AND what the log holds afterwards.
+    """
+    results = []
+    for i, text in enumerate(spec["texts"], 1):
+        submit = requests.post(f"{args.url}/submit", timeout=args.timeout,
+                               json={"text": text, "creator_id": f"eval_appeal_{i}"})
+        content_id = submit.json().get("content_id") if submit.ok else None
+        appeal = requests.post(f"{args.url}/appeal", timeout=args.timeout, json={
+            "content_id": content_id or "",
+            "reasoning": "I wrote this myself; please have a person look at it.",
+        })
+        statuses = [e.get("status") for e in entries_for(requests, args, content_id)]
+        results.append({
+            "kind": "real",
+            "submit_status": submit.status_code,
+            "content_id": content_id,
+            "appeal_status": appeal.status_code,
+            "log_statuses": statuses,
+        })
+    for bogus in spec["bogus_ids"]:
+        bogus_id = f"{bogus}-t{trial}"
+        appeal = requests.post(f"{args.url}/appeal", timeout=args.timeout, json={
+            "content_id": bogus_id,
+            "reasoning": "I wrote this myself; please have a person look at it.",
+        })
+        statuses = [e.get("status") for e in entries_for(requests, args, bogus_id)]
+        results.append({
+            "kind": "bogus",
+            "content_id": bogus_id,
+            "appeal_status": appeal.status_code,
+            "log_statuses": statuses,
+        })
+    return results
 
 
 def main():
@@ -112,20 +171,38 @@ def main():
 
         trials = []
         for trial in range(1, args.trials + 1):
+            if scenario.get("appeals"):
+                results = run_appeal_trial(requests, args, scenario["appeals"], trial)
+                trials.append(results)
+                marks = [f"{r['kind']}:{r.get('appeal_status')}" for r in results]
+                print(f"  trial {trial}: {', '.join(marks)}")
+                continue
+
             results = []
             for i, body in enumerate(bodies_for(scenario), 1):
                 preview = describe(body)
                 try:
+                    log_before = log_count(requests, args)
+                    started = time.perf_counter()
                     response = requests.post(f"{args.url}/submit", json=body,
                                              timeout=args.timeout)
-                    payload = response.json() if response.content else {}
+                    elapsed = round(time.perf_counter() - started, 3)
+                    try:
+                        payload = response.json() if response.content else {}
+                    except ValueError:
+                        payload = {"error": "response was not JSON"}
+                    new_entries = new_log_entries(requests, args, log_before)
                     results.append({
                         "status": response.status_code,
                         "guess": payload.get("guess"),
                         "confidence": payload.get("confidence"),
                         "model_score": payload.get("model_score"),
                         "style_score": payload.get("style_score"),
+                        "combined_score": payload.get("combined_score"),
                         "label": payload.get("label"),
+                        "error": payload.get("error"),
+                        "elapsed_s": elapsed,
+                        "logged_as": [e.get("status") for e in new_entries],
                         "sent": preview,
                     })
                 except Exception as exc:  # noqa: BLE001
@@ -133,7 +210,7 @@ def main():
                                     "sent": preview})
 
             trials.append(results)
-            guesses = [r.get("guess") or "—" for r in results]
+            guesses = [r.get("guess") or str(r.get("status")) for r in results]
             print(f"  trial {trial}: {', '.join(guesses)}")
 
         rows.append({"scenario": scenario, "trials": trials})
