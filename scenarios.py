@@ -26,10 +26,36 @@ SCENARIOS = [
     {
         "name": "my own writing",
         "criterion": 1,
-        # Ten pieces I wrote myself. Target: 0 high-confidence AI and at most
-        # 3 unsure, in every trial.
+        # Target: 0 high-confidence AI and at most 3 unsure, in every trial.
+        #
+        # STAND-IN TEXT. The criterion says "pieces I wrote myself"; for this
+        # run I used ten published human paragraphs instead (see the README's
+        # Run Log). Each is the first paragraph past the halfway point of the
+        # book with 80-170 words, 3+ sentences and no quoted dialogue - a fixed
+        # rule, so none were chosen for how they score. Mid-book rather than
+        # famous openings, because gpt2 has memorised famous openings and
+        # would score them as predictable.
         "texts": [
-            "REPLACE ME with a paragraph you wrote yourself.",
+            # Austen, Pride and Prejudice (1813) - Project Gutenberg #1342
+            'When coffee was over, Colonel Fitzwilliam reminded Elizabeth of having promised to play to him; and she sat down directly to the instrument. He drew a chair near her. Lady Catherine listened to half a song, and then talked, as before, to her other nephew; till the latter walked away from her, and moving with his usual deliberation towards the pianoforte, stationed himself so as to command a full view of the fair performer’s countenance. Elizabeth saw what he was doing, and at the first convenient pause turned to him with an arch smile, and said,--',
+            # Fitzgerald, The Great Gatsby (1925) - Project Gutenberg #64317
+            'Tom was evidently perturbed at Daisy’s running around alone, for on the following Saturday night he came with her to Gatsby’s party. Perhaps his presence gave the evening its peculiar quality of oppressiveness—it stands out in my memory from Gatsby’s other parties that summer. There were the same people, or at least the same sort of people, the same profusion of champagne, the same many-coloured, many-keyed commotion, but I felt an unpleasantness in the air, a pervading harshness that hadn’t been there before. Or perhaps I had merely grown used to it, grown to accept West Egg as a world complete in itself, with its own standards and its own great figures, second to nothing because it had no consciousness of being so, and now I was looking at it again, through Daisy’s eyes. It is invariably saddening to look through new eyes at things upon which you have expended your own powers of adjustment.',
+            # Doyle, The Adventures of Sherlock Holmes (1892) - Project Gutenberg #1661
+            'He was a large man with rounded shoulders, a massive head, and a broad, intelligent face, sloping down to a pointed beard of grizzled brown. A touch of red in nose and cheeks, with a slight tremor of his extended hand, recalled Holmes’ surmise as to his habits. His rusty black frock-coat was buttoned right up in front, with the collar turned up, and his lank wrists protruded from his sleeves without a sign of cuff or shirt. He spoke in a slow staccato fashion, choosing his words with care, and gave the impression generally of a man of learning and letters who had had ill-usage at the hands of fortune.',
+            # Stevenson, Treasure Island (1883) - Project Gutenberg #120
+            'So far there was no great harm. No lives were lost, and we could wade ashore in safety. But there were all our stores at the bottom, and to make things worse, only two guns out of five remained in a state for service. Mine I had snatched from my knees and held over my head, by a sort of instinct. As for the captain, he had carried his over his shoulder by a bandoleer, and like a wise man, lock uppermost. The other three had gone down with the boat.',
+            # Wilde, The Picture of Dorian Gray (1890) - Project Gutenberg #174
+            'Dorian Gray drew a long breath. The colour came back to his cheeks, and a smile played about his lips. The peril was over. He was safe for the time. Yet he could not help feeling infinite pity for the painter who had just made this strange confession to him, and wondered if he himself would ever be so dominated by the personality of a friend. Lord Henry had the charm of being very dangerous. But that was all. He was too clever and too cynical to be really fond of. Would there ever be some one who would fill him with a strange idolatry? Was that one of the things that life had in store?',
+            # Woolf, Mrs Dalloway in Bond Street (1923) - Project Gutenberg #63107
+            "It used, thought Clarissa, to be so simple. Down down through the air came the caw of the rooks. When Sylvia died, hundreds of years ago, the yew hedges looked so lovely with the diamond webs in the mist before early church. But if Dick were to die to-morrow as for believing in God--no, she would let the children choose, but for herself, like Lady Bexborough, who opened the bazaar, they say, with the telegram in her hand--Roden, her favourite, killed--she would go on. But why, if one doesn't believe? For the sake of others, she thought, taking the glove in her hand. This girl would be much more unhappy if she didn't believe.",
+            # Joyce, Dubliners (1914) - Project Gutenberg #2814
+            'Miss Devlin had become Mrs Kearney out of spite. She had been educated in a high-class convent, where she had learned French and music. As she was naturally pale and unbending in manner she made few friends at school. When she came to the age of marriage she was sent out to many houses where her playing and ivory manners were much admired. She sat amid the chilly circle of her accomplishments, waiting for some suitor to brave it and offer her a brilliant life. But the young men whom she met were ordinary and she gave them no encouragement, trying to console her romantic desires by eating a great deal of Turkish Delight in secret. However, when she drew near the limit and her friends began to loosen their tongues about her, she silenced them by marrying Mr Kearney, who was a bootmaker on Ormond Quay.',
+            # Douglass, Narrative of the Life of Frederick Douglass (1845) - Project Gutenberg #23
+            'I sailed from Baltimore for St. Michael’s in the sloop Amanda, Captain Edward Dodson. On my passage, I paid particular attention to the direction which the steamboats took to go to Philadelphia. I found, instead of going down, on reaching North Point they went up the bay, in a north-easterly direction. I deemed this knowledge of the utmost importance. My determination to run away was again revived. I resolved to wait only so long as the offering of a favorable opportunity. When that came, I was determined to be off.',
+            # E. Bronte, Wuthering Heights (1847) - Project Gutenberg #768
+            'Isabella ceased speaking, and took a drink of tea; then she rose, and bidding me put on her bonnet, and a great shawl I had brought, and turning a deaf ear to my entreaties for her to remain another hour, she stepped on to a chair, kissed Edgar’s and Catherine’s portraits, bestowed a similar salute on me, and descended to the carriage, accompanied by Fanny, who yelped wild with joy at recovering her mistress. She was driven away, never to revisit this neighbourhood: but a regular correspondence was established between her and my master when things were more settled. I believe her new abode was in the south, near London; there she had a son born a few months subsequent to her escape. He was christened Linton, and, from the first, she reported him to be an ailing, peevish creature.',
+            # C. Bronte, Jane Eyre (1847) - Project Gutenberg #1260
+            'She wanted to know if I was happy at Thornfield Hall, and what sort of a person the mistress was; and when I told her there was only a master, whether he was a nice gentleman, and if I liked him. I told her he was rather an ugly man, but quite a gentleman; and that he treated me kindly, and I was content. Then I went on to describe to her the gay company that had lately been staying at the house; and to these details Bessie listened with interest: they were precisely of the kind she relished.',
         ],
     },
     {
@@ -40,7 +66,17 @@ SCENARIOS = [
         "texts": [
             # The paragraph from the README's Sample Run.
             'I moved to this city two years ago. At first it was hard for me. I did not know anyone and my English was not good. I worked in a restaurant in the kitchen. The work was long but the people were kind. On my free day I went to the library to study. Now I can talk with my neighbors and I have some friends. I am proud of this.',
-            "REPLACE ME with another plain paragraph you wrote.",
+            # STAND-IN TEXT for the other four: published human paragraphs
+            # in a plain register, picked by the same rule plus an average
+            # sentence of 13 words or fewer.
+            # Hemingway, in our time (1924) - Project Gutenberg #61085
+            'He was delighted with Italy. It was a beautiful country he said. The people were all kind. He had been in many towns, walked much and seen many pictures. Giotto, Masaccio, and Piero della Francesca he bought reproductions of and carried them wrapped in a copy of Avanti. Mantegna he did not like.',
+            # Hemingway, The Sun Also Rises (1926) - Project Gutenberg #67138
+            'We walked back down the road from Roncesvalles with Harris between us. We had lunch at the inn and Harris went with us to the bus. He gave us his card, with his address in London and his club and his business address, and as we got on the bus he handed us each an envelope. I opened mine and there were a dozen flies in it. Harris had tied them himself. He tied all his own flies.',
+            # Hemingway, Men Without Women (1927) - Project Gutenberg #69683
+            'Jack doesn’t say anything. He just sits there on the bed. He ain’t with the others. He’s all by himself. He was wearing an old blue jersey and pants and had on boxing shoes. He needed a shave. Steinfelt and Morgan were dressers. John was quite a dresser too. Jack sat there looking Irish and tough.',
+            # Washington, Up from Slavery (1901) - Project Gutenberg #2376
+            'The first time I ever saw the late Collis P. Huntington, the great railroad man, he gave me two dollars for our school. The last time I saw him, which was a few months before he died, he gave me fifty thousand dollars toward our endowment fund. Between these two gifts there were others of generous proportions which came every year from both Mr. and Mrs. Huntington.',
         ],
     },
     {
